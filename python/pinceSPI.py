@@ -55,6 +55,7 @@ def creerBase():
             conn.close()
 
 def ecrireEnBase(entreeSPI, typeAppareil, puissance):
+    conn = None
     sql = """
         INSERT INTO mesures(id, data) VALUES(:id, json(:data))
             ON CONFLICT(id) DO UPDATE SET data=json(:data);
