@@ -2,9 +2,12 @@ import busio
 import digitalio
 import board
 import time
+import json
 import adafruit_mcp3xxx.mcp3008 as MCP # adafruit-circuitpython-mcp3xxx
 from adafruit_mcp3xxx.analog_in import AnalogIn
 import threading, time, math
+import sqlite3 # pip install pysqlite3
+from sqlite3 import Error
 
 # create the spi bus
 spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
@@ -14,6 +17,8 @@ cs = digitalio.DigitalInOut(board.D5)
 mcp = MCP.MCP3008(spi, cs)
 # create an analog input channel on pin 0
 chan = AnalogIn(mcp, MCP.P1)
+# chemin vers la base
+base = "data/pijoule.db"
 
 def lireP1():
     global voltages, run_flag
@@ -31,11 +36,59 @@ def calculerVrms(Vs):
         sumV = sumV + sqV        
     return math.sqrt(sumV / len(Vs)), maxV 
 
+def creerBase():
+    conn = None
+    try:
+        conn = sqlite3.connect(base)
+        c = conn.cursor()
+        c.execute("""
+            Create table if not exists mesures(
+                id integer PRIMARY KEY,
+                data text NOT NULL    
+            );
+            """)
+    except Error as e:
+        print(f"ERREUR : Erreur lors de la création de la base de données : {e}")
+        exit(1)
+    finally:
+        if conn:
+            conn.close()
+
+def ecrireEnBase(entreeSPI, typeAppareil, puissance):
+    sql = """
+        INSERT INTO mesures(id, data) VALUES(:id, json(:data))
+            ON CONFLICT(id) DO UPDATE SET data=json(:data);
+        """
+    data = {
+        "meta" : {
+            "point" : entreeSPI,
+            "type" : typeAppareil 
+        },
+        "value" : round(puissance, 2)
+    }
+    try:
+        conn = sqlite3.connect(base)
+        c = conn.cursor()
+        c.execute(
+            sql,
+            {
+                "id" : entreeSPI,
+                "data": json.dumps(data)
+            }
+            )
+        conn.commit()    
+    except Error as e:
+        print(f"ERREUR : Erreur lors de l'insertion en base : {e}")
+        exit(1)
+    finally:
+        if conn:
+            conn.close()  
+
 def mesure():
     global run_flag
     thread = threading.Thread(target=lireP1)
     thread.start()
-    time.sleep(1)
+    time.sleep(0.2)
     run_flag = False
     thread.join() # Au cas où ça prenne un peu de temps pour s'arrêter
 
@@ -50,10 +103,14 @@ def mesure():
     IEntrerPince = IsortiePince * 3000 # Ratio de boucle dans la pince de 3000
     puissanceEntreePince = 230 * IEntrerPince # on part du prince que l'on est en 230 V
     print(f"Puissance à travers la pince : {puissanceEntreePince:0.2f} W")
+    ecrireEnBase(1, "pince", puissanceEntreePince)
 
-# Main
-tns = time.clock_gettime_ns(0)
-tnsEnd = tns + 1000000000
-voltages = []
-run_flag = True
-mesure()
+# Main loop
+creerBase()
+while True:
+    tns = time.clock_gettime_ns(0)
+    tnsEnd = tns + 1000000000
+    voltages = []
+    run_flag = True
+    mesure()
+    time.sleep(10)
