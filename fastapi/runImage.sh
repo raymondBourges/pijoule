@@ -1,0 +1,1 @@
+docker run --name pijoule --rm -p 80:80 pijoule
