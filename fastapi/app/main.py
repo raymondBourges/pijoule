@@ -3,7 +3,7 @@ import sqlite3 # pip install pysqlite3
 from sqlite3 import Error
 import json
 
-# Usage : uvicorn app.main:app --reload
+# Usage : uvicorn app.main:app --reload --host 0.0.0.0
 
 app = FastAPI()
 # chemin vers la base
@@ -26,7 +26,7 @@ def lireMesuresEnBase():
             conn.close()
         return ret
 
-@app.get("/")
+@app.get("/metrics")
 async def root():
     content = ""
     for mesure in lireMesuresEnBase():
