@@ -10,13 +10,15 @@ facteurCorrection = 4.096 / 32767 # 4.096 car c'est la valeur max accepté par l
 def lireA0():
     global voltages, run_flag
     while run_flag:
-        voltages.append(ads.read_adc(0) * facteurCorrection)
+        voltages.append(ads.read_adc(3) * facteurCorrection)
+#        time.sleep(0.01)
 
 def calculerVrms(Vs):
     sumV = 0
     maxV = 0
     for mesure in Vs:
-        V = mesure - 1.65 # pt milieux de la courbe à 3,3V / 2
+#        print(f"Mesure : {mesure}")
+        V = mesure #- 1.65 # pt milieux de la courbe à 3,3V / 2
         if V > maxV:
             maxV = V
         sqV = V * V
@@ -36,16 +38,19 @@ def mesure():
     # print(f"Valeurs de l'entrée : {voltages}")
     print(f"Nombre de mesures : {len(voltages)}")
     Vrms, maxV = calculerVrms(voltages)
-    print(f"Max V (doit rester < 1,65 V) : {maxV:0.2f} V")
+    print(f"Max V (doit rester < 3,3 V) : {maxV:0.2f} V")
     print(f"Vrms : {Vrms * 1000:0.0f} mV")
-    IsortiePince = Vrms / 300 # Résistance de tirage de 300 homs
+    IsortiePince = Vrms / 150 # Résistance de tirage de 150 homs
     IEntrerPince = IsortiePince * 3000 # Ratio de boucle dans la pince de 3000
     puissanceEntreePince = 230 * IEntrerPince # on part du prince que l'on est en 230 V
-    print(f"Puissance à travers la pince : {puissanceEntreePince:0.2f} W")
+    print(f"Puissance à travers la pince : {puissanceEntreePince:0.2f} VA")
 
 # Main
-tns = time.clock_gettime_ns(0)
-tnsEnd = tns + 1000000000
-voltages = []
-run_flag = True
-mesure()
+#tns = time.clock_gettime_ns(0)
+#tnsEnd = tns + 1000000000
+while True:
+  voltages = []
+  run_flag = True
+  mesure()
+  time.sleep(5)
+  
