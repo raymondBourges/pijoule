@@ -1,8 +1,8 @@
 ## Pinces
-* s'inspirer de pince.py et rusb.py pour écrire en base les données lues sur le port USB en provenance du RP2040
+* <del>s'inspirer de pince.py et rusb.py pour écrire en base les données lues sur le port USB en provenance du RP2040
 * faire un sh de lancement prenant en paramètre le port USB à utiliser
   * le mettre en start auto avec du log
-* supprimer pince*
+* <del>supprimer pince*
 * adapter le fastapi pour afficher les données en base
 * installer prometheus et le brancher sur fastapi
 

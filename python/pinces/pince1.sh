@@ -1,1 +1,0 @@
-python pince.py -i 1 -e 0 -t 2000 -o 150
