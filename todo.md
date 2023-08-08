@@ -3,7 +3,7 @@
 * faire un sh de lancement prenant en paramètre le port USB à utiliser
   * le mettre en start auto avec du log
 * <del>supprimer pince*
-* adapter le fastapi pour afficher les données en base
+* <del>adapter le fastapi pour afficher les données en base
 * installer prometheus et le brancher sur fastapi
 
 ## TIC
