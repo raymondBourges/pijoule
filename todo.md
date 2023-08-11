@@ -11,7 +11,7 @@
 
 ## DOC
 * Faire une doc expliquant l'ensemble
-  * expliquer que c'est une adaptation de https://docs.openenergymonitor.org/electricity-monitoring/index.html mais avec un RP2040 via USB + boitier TIC en USB également
-  * pi
+  * <del>expliquer que c'est une adaptation de https://docs.openenergymonitor.org/electricity-monitoring/index.html mais avec un RP2040 via USB + boitier TIC en USB également
+  * <del>pi
   * RP2040 (avec adaptation en python de https://github.com/openenergymonitor/EmonLib/blob/master/EmonLib.cpp)
-  * montage et calibrage
+  * <del>montage et calibrage
