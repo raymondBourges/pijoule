@@ -1,0 +1,1 @@
+python /opt/git/pijoule/python/pzem/pzem.py

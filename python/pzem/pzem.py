@@ -3,15 +3,16 @@ from pymodbus.client import ModbusSerialClient
 import sqlite3 # pip install pysqlite3
 from sqlite3 import Error
 import time
+from datetime import datetime
 
 # Paramètres de communication série Modbus
 serial_port = "/dev/ttyUSB0" 
 # Adresses Modbus des PZEM-OO4T
-pzems = [1]
+pzems = [1,2]
 # chemin vers la base
 base = "/tmp/pijoule.db"
 # debug
-debug = True
+debug = False
 
 def creerBase():
   conn = None
@@ -28,7 +29,9 @@ def creerBase():
       );
       """)
   except Error as e:
-    print(f"ERREUR : Erreur lors de la création de la base de données : {e}")
+    maintenant = datetime.now()
+    date_heure = maintenant.strftime("%Y-%m-%d %H:%M:%S")
+    print(f"{date_heure} --> ERREUR : Erreur lors de la création de la base de données : {e}")
     exit(1)
   finally:
     if conn:
@@ -58,13 +61,13 @@ def ecrireEnBase(data):
       )
     conn.commit()    
   except Error as e:
-    print(f"ERREUR : Erreur lors de l'insertion en base : {e}")
+    maintenant = datetime.now()
+    date_heure = maintenant.strftime("%Y-%m-%d %H:%M:%S")
+    print(f"{date_heure} --> ERREUR : Erreur lors de l'insertion en base : {e}")
     exit(1)
   finally:
     if conn:
       conn.close()  
-
-
 
 # Main
 creerBase()
@@ -74,32 +77,36 @@ client = ModbusSerialClient(method="rtu", port=serial_port, baudrate=9600, stopb
 client.connect()
 
 while True:
-    for pzem in pzems:
-        try:
-            data = client.read_input_registers(0, 10, slave=pzem)
-            if data:
-                voltage = data.getRegister(0) / 10.0 # [V]
-                current = (data.getRegister(1) + (data.getRegister(2) << 16)) / 1000.0 # [A]
-                power = (data.getRegister(3) + (data.getRegister(4) << 16)) / 10.0 # [W]
-                energy = data.getRegister(5) + (data.getRegister(6) << 16) # [Wh]
-                frequency = data.getRegister(7) / 10.0 # [Hz]
-                powerFactor = data.getRegister(8) / 100.0
-                alarm = data.getRegister(9) # 0 = no alarm# La réponse contient les valeurs lues
-                ecrireEnBase([pzem, power, powerFactor, voltage, current])     
-                if debug:
-                    print("********************************")
-                    print("ID pince : " + str(pzem))
-                    print("Valeurs lues : " + str(data.registers))
-                    print('Voltage [V]: ', voltage)
-                    print('Current [A]: ', current)
-                    print('Power [W]: ', power) # active power (V * I * power factor)
-                    print('Energy [Wh]: ', energy)
-                    print('Frequency [Hz]: ', frequency)
-                    print('Power factor []: ', powerFactor)
-                    print('Alarm : ', alarm)
-            else:
-               print("Aucune réponse.")
-        except Exception as e:
-            print("Erreur : " + str(e))
-    time.sleep(1)
+  for pzem in pzems:
+    try:
+      data = client.read_input_registers(0, 10, slave=pzem)
+      if data:
+        voltage = data.getRegister(0) / 10.0 # [V]
+        current = (data.getRegister(1) + (data.getRegister(2) << 16)) / 1000.0 # [A]
+        power = (data.getRegister(3) + (data.getRegister(4) << 16)) / 10.0 # [W]
+        energy = data.getRegister(5) + (data.getRegister(6) << 16) # [Wh]
+        frequency = data.getRegister(7) / 10.0 # [Hz]
+        powerFactor = data.getRegister(8) / 100.0
+        alarm = data.getRegister(9) # 0 = no alarm# La réponse contient les valeurs lues
+        ecrireEnBase([pzem, power, powerFactor, voltage, current])     
+        if debug:
+          print("********************************")
+          print("ID pince : " + str(pzem))
+          print("Valeurs lues : " + str(data.registers))
+          print('Voltage [V]: ', voltage)
+          print('Current [A]: ', current)
+          print('Power [W]: ', power) # active power (V * I * power factor)
+          print('Energy [Wh]: ', energy)
+          print('Frequency [Hz]: ', frequency)
+          print('Power factor []: ', powerFactor)
+          print('Alarm : ', alarm)
+      else:
+        maintenant = datetime.now()
+        date_heure = maintenant.strftime("%Y-%m-%d %H:%M:%S")
+        print(f"{date_heure} --> ERREUR : Aucune réponse.")
+    except Exception as e:
+      maintenant = datetime.now()
+      date_heure = maintenant.strftime("%Y-%m-%d %H:%M:%S")
+      print(f"{date_heure} --> ERREUR {e}")
+  time.sleep(1)
 
