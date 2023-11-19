@@ -1,1 +1,1 @@
-python /opt/git/pijoule/python/pzem/pzem.py
+python -u /opt/git/pijoule/python/pzem/pzem.py
